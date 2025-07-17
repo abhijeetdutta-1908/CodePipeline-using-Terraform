@@ -1,0 +1,5 @@
+# Ignore everything in terraform/
+terraform/**
+
+# But don't ignore buildspec.yml in that folder
+!terraform/buildspec.yml
