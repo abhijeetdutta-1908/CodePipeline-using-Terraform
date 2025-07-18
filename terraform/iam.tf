@@ -1,4 +1,4 @@
-# 1. IAM Role for CodePipeline
+# ------------------------------------------IAM Role for CodePipeline-------------------------------------------
 resource "aws_iam_role" "codepipeline_role" {
   name = "${var.project_name}-codepipeline-role"
 
@@ -43,7 +43,7 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
   })
 }
 
-# 2. IAM Role for CodeBuild
+# ------------------------------------------------IAM Role for CodeBuild--------------------------------------------------------
 resource "aws_iam_role" "codebuild_role" {
   name = "${var.project_name}-codebuild-role"
 
@@ -81,8 +81,7 @@ resource "aws_iam_role_policy" "codebuild_policy" {
   })
 }
 
-# 3. IAM Role for CodeDeploy
-# 3.1. IAM Role for CodeDeploy
+# -----------------------------------------------------IAM Role for CodeDeploy------------------------------------------------
 resource "aws_iam_role" "codedeploy_role" {
   name = "${var.project_name}-codedeploy-role"
 
@@ -98,7 +97,7 @@ resource "aws_iam_role" "codedeploy_role" {
   })
 }
 
-# 3.2. IAM Policy for CodeDeploy Role (permissions to EC2, ASG, Tags, etc.)
+# ---------------------------------------- IAM Policy for CodeDeploy Role (permissions to EC2, ASG, Tags, etc.)------------------------------
 resource "aws_iam_role_policy" "codedeploy_permissions" {
   name = "codedeploy-permissions"
   role = aws_iam_role.codedeploy_role.name
@@ -139,7 +138,7 @@ resource "aws_iam_role_policy" "codedeploy_register" {
   })
 }
 
-# 4. IAM Role for EC2 Instance
+# ----------------------------------------------------------IAM Role for EC2 Instance---------------------------------------
 resource "aws_iam_role" "ec2_role" {
   name = "${var.project_name}-ec2-role"
   assume_role_policy = jsonencode({

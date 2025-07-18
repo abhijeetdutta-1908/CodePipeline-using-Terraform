@@ -1,5 +1,3 @@
-# terraform/main.tf
-
 terraform {
   required_providers {
     aws = {
@@ -13,13 +11,12 @@ provider "aws" {
   region = var.aws_region
 }
 
-# S3 Bucket for storing pipeline artifacts
+# --------------------------------------------S3 Bucket for storing pipeline artifacts------------------------------------------------
 resource "aws_s3_bucket" "codepipeline_artifacts" {
   bucket        = "${var.project_name}-artifacts-${random_id.id.hex}"
   force_destroy = true # Use with caution in production
 }
 
-# FIX 1: Use the dedicated resource for S3 bucket versioning
 resource "aws_s3_bucket_versioning" "codepipeline_artifacts_versioning" {
   bucket = aws_s3_bucket.codepipeline_artifacts.id
   versioning_configuration {
@@ -31,7 +28,7 @@ resource "random_id" "id" {
   byte_length = 8
 }
 
-# CodeBuild Project
+# ----------------------------------------------------------------CodeBuild Project--------------------------------------------------------------
 resource "aws_codebuild_project" "build_project" {
   name          = "${var.project_name}-build"
   description   = "Build project for the ${var.project_name} pipeline"
@@ -66,7 +63,7 @@ resource "aws_codebuild_project" "build_project" {
   }
 }
 
-# CodeDeploy Application and Deployment Group
+# --------------------------------------------------------CodeDeploy Application and Deployment Group------------------------------------
 resource "aws_codedeploy_app" "deploy_app" {
   compute_platform = "Server"
   name             = "${var.project_name}-app"
@@ -83,14 +80,13 @@ resource "aws_codedeploy_deployment_group" "deploy_group" {
     value = "${var.project_name}-instance"
   }
 
-  # FIX 2: Changed deployment_option to WITHOUT_TRAFFIC_CONTROL for in-place deployments
   deployment_style {
     deployment_option = "WITHOUT_TRAFFIC_CONTROL"
     deployment_type   = "IN_PLACE"
   }
 }
 
-# CodePipeline
+# ---------------------------------------------------------------CodePipeline---------------------------------------------------
 resource "aws_codepipeline" "pipeline" {
   name     = "${var.project_name}-pipeline"
   role_arn = aws_iam_role.codepipeline_role.arn
@@ -114,7 +110,7 @@ resource "aws_codepipeline" "pipeline" {
         ConnectionArn    = data.aws_codestarconnections_connection.github.arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
         BranchName       = var.github_branch
-        DetectChanges        = "true"  # <-- ✅ This is what makes it auto-trigger on Git push
+        DetectChanges        = "true"  
       }
       run_order = 1
     }
@@ -155,13 +151,13 @@ resource "aws_codepipeline" "pipeline" {
   }
 }
 
-#github connection
+#-----------------------------------------------------github connection------------------------------------------------------
 data "aws_codestarconnections_connection" "github" {
   arn = "arn:aws:codeconnections:us-east-1:520864642809:connection/e773b291-2531-4521-96b1-f665e4234a34"
 }
 
 
-# --- Target EC2 Instance ---
+# -------------------------------------------------- Target EC2 Instance ---------------------------------------------------
 
 # Find latest Amazon Linux 2 AMI
 data "aws_ami" "amazon_linux" {

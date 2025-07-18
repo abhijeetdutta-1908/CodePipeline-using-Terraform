@@ -1,4 +1,3 @@
-#!/bin/bash
 sudo yum update -y
 sudo yum install ruby -y
 sudo yum install wget -y
