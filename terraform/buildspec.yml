@@ -1,9 +1,13 @@
+# terraform/buildspec.yml
+
 version: 0.2
 
 phases:
   build:
     commands:
-      - echo "No build steps required for this static site."
+      - echo "Build phase is not needed for this static site. Preparing artifacts..."
 artifacts:
+  # These paths are relative to the root of your source code checkout.
   files:
-    - '**/*'
+    - appspec.yml
+    - 'app/**/*'
