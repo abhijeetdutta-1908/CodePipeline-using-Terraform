@@ -2,4 +2,7 @@
 terraform/**
 
 # But don't ignore buildspec.yml in that folder
-!terraform/buildspec.yml
+!terraform/iam.tf
+!terraform/main.tf
+!terraform/outputs.tf
+!terraform/variables.tf
