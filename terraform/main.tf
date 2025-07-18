@@ -2,10 +2,11 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = ">= 5.39.0"
     }
   }
 }
+
 
 provider "aws" {
   region = var.aws_region
@@ -88,12 +89,25 @@ resource "aws_codedeploy_deployment_group" "deploy_group" {
 
 # ---------------------------------------------------------------CodePipeline---------------------------------------------------
 resource "aws_codepipeline" "pipeline" {
-  name     = "${var.project_name}-pipeline"
-  role_arn = aws_iam_role.codepipeline_role.arn
+  name          = "${var.project_name}-pipeline"
+  role_arn      = aws_iam_role.codepipeline_role.arn
+  pipeline_type = "V2"
 
   artifact_store {
     location = aws_s3_bucket.codepipeline_artifacts.bucket
     type     = "S3"
+  }
+
+  trigger {
+    provider_type = "CodeStarSourceConnection"
+    git_configuration {
+      source_action_name = "Source"
+      push {
+        branches {
+          includes = [var.github_branch]
+        }
+      }
+    }
   }
 
   stage {
@@ -110,7 +124,7 @@ resource "aws_codepipeline" "pipeline" {
         ConnectionArn    = data.aws_codestarconnections_connection.github.arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
         BranchName       = var.github_branch
-        DetectChanges        = "true"  
+        DetectChanges    = "true"
       }
       run_order = 1
     }
@@ -150,6 +164,7 @@ resource "aws_codepipeline" "pipeline" {
     }
   }
 }
+
 
 #-----------------------------------------------------github connection------------------------------------------------------
 data "aws_codestarconnections_connection" "github" {
