@@ -49,18 +49,19 @@ resource "aws_codebuild_project" "build_project" {
 
   source {
     type      = "CODEPIPELINE"
+    # ✅ CORRECTED: Fixed indentation of the 'artifacts' block in the buildspec.
     buildspec = <<-EOT
-    version: 0.2
-    phases:
-      build:
-        commands:
-          - echo "Preparing artifacts..."
-    artifacts:
-      # These paths are relative to the root of your repository
-      files:
-        - appspec.yml
-        - 'app/**/*'
-  EOT
+      version: 0.2
+      phases:
+        build:
+          commands:
+            - echo "Preparing artifacts..."
+      artifacts:
+        # These paths are relative to the root of your repository
+        files:
+          - appspec.yml
+          - 'app/**/*'
+    EOT
   }
 }
 
@@ -98,6 +99,8 @@ resource "aws_codepipeline" "pipeline" {
     type     = "S3"
   }
 
+  # This trigger block is CORRECT and is the proper way to configure
+  # triggers for a V2 pipeline.
   trigger {
     provider_type = "CodeStarSourceConnection"
     git_configuration {
@@ -124,7 +127,8 @@ resource "aws_codepipeline" "pipeline" {
         ConnectionArn    = data.aws_codestarconnections_connection.github.arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
         BranchName       = var.github_branch
-        DetectChanges    = "true"
+        # ⛔️ REMOVED: This line conflicts with the top-level trigger block.
+        # DetectChanges    = "true"
       }
       run_order = 1
     }
@@ -166,6 +170,7 @@ resource "aws_codepipeline" "pipeline" {
 }
 
 
+
 #-----------------------------------------------------github connection------------------------------------------------------
 data "aws_codestarconnections_connection" "github" {
   arn = "arn:aws:codeconnections:us-east-1:520864642809:connection/e773b291-2531-4521-96b1-f665e4234a34"
@@ -185,7 +190,7 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
-# Security Group for EC2
+# ---------------------------------------------------------Security Group for EC2-----------------------------------------------------
 resource "aws_security_group" "instance_sg" {
   name = "${var.project_name}-instance-sg"
   ingress {
@@ -210,7 +215,7 @@ resource "aws_security_group" "instance_sg" {
   }
 }
 
-# EC2 Instance to deploy to
+#---------------------------------------------------------------EC2 Instance to deploy to-----------------------------------------
 resource "aws_instance" "web_server" {
   ami                    = data.aws_ami.amazon_linux.id
   instance_type          = "t2.micro"

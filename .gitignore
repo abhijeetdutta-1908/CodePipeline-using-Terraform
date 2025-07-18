@@ -1,5 +1,6 @@
 # Ignore everything in terraform/
 terraform/**
+test/terraform.tfstate
 
 # But don't ignore buildspec.yml in that folder
 !terraform/iam.tf
