@@ -49,7 +49,6 @@ resource "aws_codebuild_project" "build_project" {
 
   source {
     type      = "CODEPIPELINE"
-    # ✅ CORRECTED: Fixed indentation of the 'artifacts' block in the buildspec.
     buildspec = <<-EOT
       version: 0.2
       phases:
@@ -173,7 +172,7 @@ resource "aws_codepipeline" "pipeline" {
 
 #-----------------------------------------------------github connection------------------------------------------------------
 data "aws_codestarconnections_connection" "github" {
-  arn = "arn:aws:codeconnections:us-east-1:520864642809:connection/e773b291-2531-4521-96b1-f665e4234a34"
+  arn = "arn:aws:codeconnections:us-east-1:520864642809:connection/af9596d7-5b27-4a25-b86d-e035a37e86f1"
 }
 
 
