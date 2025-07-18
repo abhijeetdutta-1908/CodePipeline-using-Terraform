@@ -114,7 +114,9 @@ resource "aws_codepipeline" "pipeline" {
         ConnectionArn    = data.aws_codestarconnections_connection.github.arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
         BranchName       = var.github_branch
+        DetectChanges        = "true"  # <-- ✅ This is what makes it auto-trigger on Git push
       }
+      run_order = 1
     }
   }
 
