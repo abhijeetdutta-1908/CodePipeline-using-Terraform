@@ -37,12 +37,7 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
       {
         Effect   = "Allow",
         Action   = "codestar-connections:UseConnection",
-        Resource = "arn:aws:codestar-connections:us-east-1:520864642809:connection/8cf76447-b75f-4220-a03d-635997a9e02d"
-      },
-      {
-      Effect   = "Allow"
-      Action   = "codestar-connections:UseConnection"
-      Resource = "arn:aws:codestar-connections:us-east-1:520864642809:connection/447695d2-a3c8-4932-8146-70169238e3c0"
+        Resource = data.aws_codestarconnections_connection.github.arn
       }
     ]
   })

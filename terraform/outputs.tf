@@ -15,5 +15,5 @@ output "ec2_public_ip" {
 }
 
 output "github_connection_arn" {
-  value = aws_codestarconnections_connection.github_connection.arn
+  value       = data.aws_codestarconnections_connection.github.arn
 }

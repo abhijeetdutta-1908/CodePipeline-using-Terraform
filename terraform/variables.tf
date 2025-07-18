@@ -31,3 +31,8 @@ variable "github_token" {
   type        = string
   sensitive   = true
 }
+
+variable "codestar_connection_arn" {
+  description = "The ARN of the existing AWS CodeStar Connection."
+  type        = string
+}

@@ -16,57 +16,90 @@ import (
 func TestTerraformAwsCodePipeline(t *testing.T) {
 	t.Parallel()
 
-	// The Terraform directory to test
 	terraformDir := "../terraform"
 
-	// Configure Terraform options
 	terraformOptions := &terraform.Options{
 		TerraformDir: terraformDir,
-		// We don't need to specify vars here if using terraform.tfvars
 	}
 
-	// At the end of the test, run `terraform destroy`
+	// Clean up after test
 	defer terraform.Destroy(t, terraformOptions)
 
-	// Run `terraform init` and `terraform apply`
+	// Deploy infrastructure
 	terraform.InitAndApply(t, terraformOptions)
 
-	// Get outputs from Terraform
+	// --- Get Outputs ---
 	pipelineName := terraform.Output(t, terraformOptions, "codepipeline_name")
-	awsRegion := terraform.Output(t, terraformOptions, "aws_region") // Assuming you add this output
+	awsRegion := terraform.Output(t, terraformOptions, "aws_region")
 	ec2PublicIp := terraform.Output(t, terraformOptions, "ec2_public_ip")
 
-	// --- Validation Checks ---
+	fmt.Println("Pipeline Name:", pipelineName)
+	fmt.Println("AWS Region:", awsRegion)
+	fmt.Println("EC2 Public IP:", ec2PublicIp)
 
-	// 1. Check if the CodePipeline exists and has the correct name
+	// --- AWS SDK Setup ---
 	sess, err := session.NewSession(&aws.Config{Region: aws.String(awsRegion)})
 	assert.NoError(t, err)
 	cpClient := codepipeline.New(sess)
 
-	getPipelineInput := &codepipeline.GetPipelineInput{
+	// --- Check if CodePipeline Exists ---
+	_, err = cpClient.GetPipeline(&codepipeline.GetPipelineInput{
 		Name: aws.String(pipelineName),
-	}
-
-	_, err = cpClient.GetPipeline(getPipelineInput)
+	})
 	assert.NoError(t, err, "Failed to find CodePipeline: %s", pipelineName)
 
-	// 2. Trigger the pipeline (optional, but good for end-to-end testing)
-	// For this test, we'll just check if the initial deployment worked.
-	// A more advanced test would commit a change and wait for the deployment.
+	// --- Wait for Pipeline Execution to Succeed ---
+	fmt.Println("Waiting for CodePipeline to succeed...")
 
-	// 3. Check if the EC2 instance is serving the correct content
-	// It can take a few minutes for the first deployment to complete.
+	waitForPipelineSuccess(t, cpClient, pipelineName)
+
+	// --- HTTP Test on EC2 ---
 	url := fmt.Sprintf("http://%s", ec2PublicIp)
 	expectedText := "Your AWS CodePipeline deployment is working."
+	maxRetries := 30
+	timeBetweenRetries := 10 * time.Second
 
-	// Retry checking the URL until we get the expected response or timeout.
+	fmt.Println("Checking URL:", url)
+
+	// Retry HTTP check
 	http_helper.HttpGetWithRetry(
 		t,
 		url,
 		nil,
 		200,
 		expectedText,
-		30,           // Number of retries
-		10*time.Second, // Delay between retries
+		maxRetries,
+		timeBetweenRetries,
 	)
+}
+
+// Helper to wait for CodePipeline to reach "Succeeded"
+func waitForPipelineSuccess(t *testing.T, cpClient *codepipeline.CodePipeline, pipelineName string) {
+	retries := 20
+	sleep := 15 * time.Second
+
+	for i := 0; i < retries; i++ {
+		stateOutput, err := cpClient.GetPipelineState(&codepipeline.GetPipelineStateInput{
+			Name: aws.String(pipelineName),
+		})
+		assert.NoError(t, err)
+
+		allSucceeded := true
+		for _, stage := range stateOutput.StageStates {
+			if stage.LatestExecution == nil || *stage.LatestExecution.Status != "Succeeded" {
+				allSucceeded = false
+				break
+			}
+		}
+
+		if allSucceeded {
+			fmt.Println("✅ CodePipeline succeeded.")
+			return
+		}
+
+		fmt.Printf("⏳ Pipeline not yet complete. Retrying (%d/%d)...\n", i+1, retries)
+		time.Sleep(sleep)
+	}
+
+	t.Fatal("❌ CodePipeline did not succeed within expected time")
 }

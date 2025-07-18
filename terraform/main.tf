@@ -111,7 +111,7 @@ resource "aws_codepipeline" "pipeline" {
       output_artifacts = ["SourceArtifact"]
 
       configuration = {
-        ConnectionArn    = aws_codestarconnections_connection.github_connection.arn
+        ConnectionArn    = data.aws_codestarconnections_connection.github.arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
         BranchName       = var.github_branch
       }
@@ -153,10 +153,9 @@ resource "aws_codepipeline" "pipeline" {
   }
 }
 
-# GitHub Connection
-resource "aws_codestarconnections_connection" "github_connection" {
-  name          = "${var.project_name}-github-connection"
-  provider_type = "GitHub"
+#github connection
+data "aws_codestarconnections_connection" "github" {
+  arn = "arn:aws:codeconnections:us-east-1:520864642809:connection/e773b291-2531-4521-96b1-f665e4234a34"
 }
 
 
