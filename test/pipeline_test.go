@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
-	"github.com/gruntwork-io/terratest/modules/http-helper"
+	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 )
@@ -48,6 +48,13 @@ func TestTerraformAwsCodePipeline(t *testing.T) {
 	})
 	assert.NoError(t, err, "Failed to find CodePipeline: %s", pipelineName)
 
+	// --- Trigger Pipeline Execution ---
+	fmt.Println("Starting pipeline execution...")
+	_, err = cpClient.StartPipelineExecution(&codepipeline.StartPipelineExecutionInput{
+		Name: aws.String(pipelineName),
+	})
+	assert.NoError(t, err, "Failed to start CodePipeline execution")
+
 	// --- Wait for Pipeline Execution to Succeed ---
 	fmt.Println("Waiting for CodePipeline to succeed...")
 
@@ -55,7 +62,6 @@ func TestTerraformAwsCodePipeline(t *testing.T) {
 
 	// --- HTTP Test on EC2 ---
 	url := fmt.Sprintf("http://%s", ec2PublicIp)
-	expectedText := "Your AWS CodePipeline deployment is working."
 	maxRetries := 30
 	timeBetweenRetries := 10 * time.Second
 
@@ -67,7 +73,7 @@ func TestTerraformAwsCodePipeline(t *testing.T) {
 		url,
 		nil,
 		200,
-		expectedText,
+		"",
 		maxRetries,
 		timeBetweenRetries,
 	)

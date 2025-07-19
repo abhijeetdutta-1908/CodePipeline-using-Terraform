@@ -17,3 +17,8 @@ output "ec2_public_ip" {
 output "github_connection_arn" {
   value       = data.aws_codestarconnections_connection.github.arn
 }
+
+output "aws_region" {
+  description = "The AWS region where resources are deployed."
+  value       = var.aws_region
+}

@@ -98,20 +98,6 @@ resource "aws_codepipeline" "pipeline" {
     type     = "S3"
   }
 
-  # This trigger block is CORRECT and is the proper way to configure
-  # triggers for a V2 pipeline.
-  trigger {
-    provider_type = "CodeStarSourceConnection"
-    git_configuration {
-      source_action_name = "Source"
-      push {
-        branches {
-          includes = [var.github_branch]
-        }
-      }
-    }
-  }
-
   stage {
     name = "Source"
     action {
@@ -126,8 +112,6 @@ resource "aws_codepipeline" "pipeline" {
         ConnectionArn    = data.aws_codestarconnections_connection.github.arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
         BranchName       = var.github_branch
-        # ⛔️ REMOVED: This line conflicts with the top-level trigger block.
-        # DetectChanges    = "true"
       }
       run_order = 1
     }
