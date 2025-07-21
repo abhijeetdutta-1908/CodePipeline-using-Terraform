@@ -68,14 +68,17 @@ func TestTerraformAwsCodePipeline(t *testing.T) {
 	fmt.Println("Checking URL:", url)
 
 	// Retry HTTP check
-	http_helper.HttpGetWithRetry(
+	http_helper.HttpGetWithRetryWithCustomValidation(
 		t,
 		url,
 		nil,
-		200,
-		"",
 		maxRetries,
 		timeBetweenRetries,
+		func(statusCode int, body string) bool {
+			t.Logf("Status code: %d", statusCode)
+			t.Logf("Body: %s", body)
+			return statusCode == 200
+		},
 	)
 }
 
